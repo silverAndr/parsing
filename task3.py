@@ -1,8 +1,9 @@
-
 import sys
 import pandas as pd
 import xlsxwriter # pip install XlsxWriter
 import requests # pip install requests
+import json
+
 from bs4 import BeautifulSoup as bs # pip install beautifulsoup4
 
 headers = {'accept': '*/*', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
@@ -56,6 +57,22 @@ def hh_parse(base_url, headers):
                         print('error')
                 print('OK')
         df = pd.DataFrame(jobs)
-        print(df)
+        df.to_csv('list.csv')
 hh_parse(base_url, headers)
 
+
+pip install pymongo
+from pymongo import MongoClient
+import pandas as pd
+list = pd.read_csv('list.csv', names=['title','money', 'company', 'content', 'link'])
+list = list[['title','money', 'company', 'content', 'link']].tail(-1)
+list
+
+def save_vacancies(list):
+    mdb = MongoClient('localhost', 27017)
+    job_db = mdb['jobs']
+    vacancies = job_db.vacancies
+    dict_list = list.to_dict(orient='records') # как хорошо, что есть ориентация для создания словаря из датафрейма.
+    vacancies.insert_many(dict_list)
+
+save_vacancies(list)
